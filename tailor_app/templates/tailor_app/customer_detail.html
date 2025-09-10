@@ -1,0 +1,83 @@
+{% extends 'tailor_app/base.html' %}
+
+{% block title %}{{ customer.name }} | The Digital Thread{% endblock %}
+
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2 class="mb-0">{{ customer.name }}</h2>
+            <a href="{% url 'edit_customer' customer.pk %}" class="btn btn-outline-secondary btn-sm">Edit Details</a>
+        </div>
+    </div>
+    <div class="card-body">
+        <p><strong>Phone:</strong> {{ customer.phone }}</p>
+        <p><strong>Email:</strong> {{ customer.email|default:"Not provided" }}</p>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">Measurements</h3>
+            <a href="{% url 'add_measurement' customer.pk %}" class="btn btn-primary btn-sm">Add Measurement</a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if measurements %}
+            <ul class="list-group list-group-flush">
+                {% for m in measurements %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        <strong>{{ m.measurement_name }}:</strong>
+                        <span class="ms-2">{{ m.value }} inches</span>
+                    </span>
+                    <div>
+                        <a href="{% url 'edit_measurement' m.pk %}" class="btn btn-outline-secondary btn-sm">Edit</a>
+                        <a href="{% url 'delete_measurement' m.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="p-3">
+                <p class="mb-0">No measurements recorded for this customer yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h3 class="mb-0">Order History</h3>
+            <a href="{% url 'add_order' customer.pk %}" class="btn btn-primary btn-sm">Add New Order</a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+            {% for order in orders %}
+                <a href="{% url 'order_detail' order.pk %}" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ order.garment_type }}</h5>
+                        <small>Due: {{ order.due_date|date:"M d, Y" }}</small>
+                    </div>
+                    <p class="mb-1">Order #{{order.id}} placed on {{ order.order_date|date:"M d, Y" }}</p>
+                    <span class="badge 
+                        {% if order.status == 'New' %}bg-secondary
+                        {% elif order.status == 'Stitching' %}bg-warning text-dark
+                        {% elif order.status == 'Ready' %}bg-info text-dark
+                        {% elif order.status == 'Completed' %}bg-success
+                        {% else %}bg-primary
+                        {% endif %}">
+                        {{ order.status }}
+                    </span>
+                </a>
+            {% empty %}
+                <li class="list-group-item">No orders found for this customer.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
+

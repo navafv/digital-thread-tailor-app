@@ -1,0 +1,81 @@
+{% extends 'tailor_app/base.html' %}
+
+{% block title %}Dashboard | The Digital Thread{% endblock %}
+
+{% block content %}
+<!-- Stat Cards -->
+<div class="row mb-4">
+    <div class="col-md-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-people-fill"></i> Total Customers</h5>
+                <p class="card-text fs-1 fw-bold">{{ total_customers }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title"><i class="bi bi-journal-text"></i> Active Orders</h5>
+                <p class="card-text fs-1 fw-bold">{{ active_orders_count }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Upcoming Deadlines -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="bi bi-calendar-week"></i> Upcoming Deadlines (Next 7 Days)</h4>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for order in upcoming_deadlines %}
+                        <a href="{% url 'order_detail' order.pk %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ order.garment_type }} for {{ order.customer.name }}</h6>
+                                <span class="badge bg-danger">{{ order.due_date|date:"D, M d" }}</span>
+                            </div>
+                        </a>
+                    {% empty %}
+                        <li class="list-group-item">No deadlines in the next 7 days!</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="bi bi-clock-history"></i> Recent Orders</h4>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    {% for order in recent_orders %}
+                         <a href="{% url 'order_detail' order.pk %}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ order.garment_type }} for {{ order.customer.name }}</h6>
+                                <small>{{ order.order_date|date:"M d" }}</small>
+                            </div>
+                            <span class="badge 
+                                {% if order.status == 'New' %}bg-secondary
+                                {% elif order.status == 'Stitching' %}bg-warning text-dark
+                                {% elif order.status == 'Completed' %}bg-success
+                                {% else %}bg-primary
+                                {% endif %}">
+                                {{ order.status }}
+                            </span>
+                        </a>
+                    {% empty %}
+                        <li class="list-group-item">No recent orders found.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'tailor_app/base.html' %}
+
+{% block title %}Confirm Deletion | The Digital Thread{% endblock %}
+
+{% block content %}
+<div class="card col-md-6 mx-auto text-center">
+    <div class="card-header bg-danger text-white">
+        <h2>Confirm Deletion</h2>
+    </div>
+    <div class="card-body">
+        <p class="lead">Are you sure you want to delete the following?</p>
+        <h4>"{{ object }}"</h4>
+        
+        <form method="post">
+            {% csrf_token %}
+            <a href="{{ cancel_url }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-danger">Yes, Delete</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

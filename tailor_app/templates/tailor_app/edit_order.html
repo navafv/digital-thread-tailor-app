@@ -1,0 +1,63 @@
+{% extends 'tailor_app/base.html' %}
+
+{% block title %}Edit Order #{{ order.id }} | The Digital Thread{% endblock %}
+
+{% block content %}
+<div class="card col-md-8 mx-auto">
+    <div class="card-header">
+        <h2 class="text-center">Edit Order for {{ order.customer.name }}</h2>
+    </div>
+    <div class="card-body">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Garment Type</label>
+                    {{ form.garment_type }}
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Due Date</label>
+                    {{ form.due_date }}
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Fabric Details</label>
+                {{ form.fabric_details }}
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Style Notes / Instructions</label>
+                {{ form.style_notes }}
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Total Price (₹)</label>
+                    {{ form.price }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Amount Paid (₹)</label>
+                    {{ form.amount_paid }}
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Status</label>
+                    {{ form.status }}
+                </div>
+            </div>
+
+            {% if form.errors %}
+                <div class="alert alert-danger">
+                    Please correct the errors in the form.
+                </div>
+            {% endif %}
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-3">
+                <a href="{% url 'order_detail' order.pk %}" class="btn btn-secondary me-md-2">Cancel</a>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

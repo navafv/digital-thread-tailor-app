@@ -1,0 +1,72 @@
+{% extends 'tailor_app/base.html' %}
+
+{% block title %}Order #{{ order.id }} | The Digital Thread{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-light">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="mb-0">Order #{{ order.id }} - {{ order.garment_type }}</h2>
+                <p class="mb-0">For: <a href="{% url 'customer_detail' order.customer.pk %}">{{ order.customer.name }}</a></p>
+            </div>
+            <span class="badge fs-6
+                {% if order.status == 'New' %}bg-secondary
+                {% elif order.status == 'Stitching' %}bg-warning text-dark
+                {% elif order.status == 'Ready' %}bg-info text-dark
+                {% elif order.status == 'Completed' %}bg-success
+                {% else %}bg-primary
+                {% endif %}">
+                {{ order.status }}
+            </span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <!-- Left Column: Details -->
+            <div class="col-md-8">
+                <h4>Details</h4>
+                <p><strong>Fabric:</strong> {{ order.fabric_details|default:"N/A" }}</p>
+                <p><strong>Style Notes:</strong></p>
+                <div class="p-3 bg-light rounded">
+                    {{ order.style_notes|linebreaksbr|default:"No special instructions provided." }}
+                </div>
+            </div>
+
+            <!-- Right Column: Dates & Finances -->
+            <div class="col-md-4">
+                <h4>Timeline &amp; Payment</h4>
+                <ul class="list-group">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Order Date
+                        <span>{{ order.order_date|date:"M d, Y" }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Due Date
+                        <span>{{ order.due_date|date:"M d, Y" }}</span>
+                    </li>
+                </ul>
+                <ul class="list-group mt-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Total Price
+                        <span>₹{{ order.price }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        Amount Paid
+                        <span>₹{{ order.amount_paid }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center list-group-item-info">
+                        <strong>Balance Due</strong>
+                        <strong>₹{{ order.balance_due }}</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer text-end">
+        <a href="{% url 'edit_order' order.pk %}" class="btn btn-outline-secondary">Edit Order</a>
+        <a href="{% url 'customer_detail' order.customer.pk %}" class="btn btn-secondary">Back to Customer</a>
+    </div>
+</div>
+{% endblock %}
+
