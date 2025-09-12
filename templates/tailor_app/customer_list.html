@@ -1,0 +1,26 @@
+<!-- tailor_app/templates/tailor_app/customer_list.html -->
+{% extends 'tailor_app/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Customers</h1>
+    <a href="{% url 'tailor_app:add_customer' %}" class="btn btn-primary">Add New Customer</a>
+</div>
+
+<div class="list-group">
+    {% for customer in customers %}
+        <a href="{% url 'tailor_app:customer_detail' customer.pk %}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ customer.name }}</h5>
+                <small>Added on {{ customer.created_at|date:"Y-m-d" }}</small>
+            </div>
+            <p class="mb-1">{{ customer.phone }}</p>
+        </a>
+    {% empty %}
+        <div class="alert alert-info" role="alert">
+            No customers found. <a href="{% url 'tailor_app:add_customer' %}">Add one now!</a>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
+

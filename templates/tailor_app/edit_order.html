@@ -1,0 +1,21 @@
+<!-- tailor_app/templates/tailor_app/edit_order.html -->
+{% extends 'tailor_app/base.html' %}
+{% block content %}
+<h2>Edit Order #{{ order.id }} for {{ order.customer.name }}</h2>
+<form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <hr>
+    <h4>Materials Used</h4>
+    {{ material_formset.management_form }}
+    {% for form in material_formset %}
+        <div class="row align-items-center mb-2">
+            <div class="col-md-6">{{ form.material }}</div>
+            <div class="col-md-4">{{ form.quantity_used }}</div>
+            <div class="col-md-2">{{ form.DELETE }}</div>
+        </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-success">Update Order</button>
+</form>
+{% endblock %}
+

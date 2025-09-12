@@ -1,47 +1,102 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Customer, Order, Measurement, OrderImage
-from .forms import CustomerForm, OrderForm, MeasurementForm, OrderImageForm
-from django.utils import timezone
-from datetime import timedelta
-from django.db.models import Q, Sum, F
-from django.contrib.auth.decorators import login_required
+# tailor_app/views.py
 
-# --- Dashboard ---
+import calendar
+from datetime import timedelta
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.urls import reverse
+from django.utils import timezone
+from django.db import models
+from django.db.models import Sum, Count
+from django.db.models.functions import TruncMonth
+from django.template.loader import get_template
+from weasyprint import HTML
+from django.contrib.auth.models import User
+from django.contrib import messages
+import random
+import string
+
+from .models import Customer, Order, Measurement, OrderImage, Appointment, Supplier, InventoryItem
+from .forms import CustomerForm, OrderForm, MeasurementForm, OrderImageForm, AppointmentForm, SupplierForm, InventoryItemForm, OrderMaterialFormSet
+
 @login_required
 def dashboard(request):
-    # Filter all queries by the logged-in user (the tailor)
-    total_customers = Customer.objects.filter(tailor=request.user).count()
-    active_orders = Order.objects.filter(customer__tailor=request.user).exclude(status__in=['Completed', 'Cancelled'])
-    active_orders_count = active_orders.count()
-    outstanding_revenue = active_orders.aggregate(total=Sum(F('price') - F('amount_paid')))['total'] or 0.00
-    seven_days_from_now = timezone.now().date() + timedelta(days=7)
-    upcoming_deadlines = active_orders.filter(due_date__lte=seven_days_from_now).order_by('due_date')
-    recent_orders = Order.objects.filter(customer__tailor=request.user).order_by('-order_date')[:5]
+    customers = Customer.objects.filter(tailor=request.user)
+    orders = Order.objects.filter(customer__tailor=request.user)
+    
+    total_customers = customers.count()
+    pending_orders = orders.filter(status='Pending').count()
+    completed_orders_this_month = orders.filter(
+        status='Completed',
+        updated_at__month=timezone.now().month
+    ).count()
+
+    outstanding_revenue = orders.exclude(status__in=['Completed', 'Delivered', 'Cancelled']).aggregate(
+        total_balance=Sum('price') - Sum('amount_paid')
+    )['total_balance'] or 0.00
+
+    pending_requests = Appointment.objects.filter(
+        tailor=request.user, 
+        status='Requested'
+    ).order_by('start_time')
+
+    low_stock_items = InventoryItem.objects.filter(
+        tailor=request.user,
+        quantity_in_stock__lte=models.F('reorder_level') # F() allows comparing two fields
+    ).order_by('quantity_in_stock')
 
     context = {
         'total_customers': total_customers,
-        'active_orders_count': active_orders_count,
+        'pending_orders': pending_orders,
+        'completed_orders_this_month': completed_orders_this_month,
         'outstanding_revenue': outstanding_revenue,
-        'upcoming_deadlines': upcoming_deadlines,
-        'recent_orders': recent_orders,
+        'pending_requests': pending_requests,
+        'low_stock_items': low_stock_items,
     }
     return render(request, 'tailor_app/dashboard.html', context)
 
-# --- Customer Views ---
+@login_required
+def get_monthly_revenue_data(request):
+    six_months_ago = timezone.now() - timedelta(days=180)
+    revenue_data = Order.objects.filter(
+        customer__tailor=request.user,
+        status__in=['Completed', 'Delivered'],
+        updated_at__gte=six_months_ago
+    ).annotate(
+        month=TruncMonth('updated_at')
+    ).values('month').annotate(
+        total_revenue=Sum('price')
+    ).order_by('month')
+
+    data = {
+        "labels": [calendar.month_name[item['month'].month] for item in revenue_data],
+        "values": [float(item['total_revenue']) for item in revenue_data],
+    }
+    return JsonResponse(data)
+
+@login_required
+def reports_view(request):
+    orders = Order.objects.filter(customer__tailor=request.user).order_by('-created_at')
+    context = {
+        'orders': orders,
+    }
+    return render(request, 'tailor_app/reports.html', context)
+
 @login_required
 def customer_list(request):
     query = request.GET.get('q')
-    # Base queryset for the logged-in user
-    customers = Customer.objects.filter(tailor=request.user)
     if query:
-        customers = customers.filter(
-            Q(name__icontains=query) | Q(phone__icontains=query)
+        customers = Customer.objects.filter(
+            models.Q(name__icontains=query) | models.Q(phone__icontains=query),
+            tailor=request.user
         )
-    return render(request, 'tailor_app/customer_list.html', {'customers': customers.order_by('name'), 'query': query})
+    else:
+        customers = Customer.objects.filter(tailor=request.user)
+    return render(request, 'tailor_app/customer_list.html', {'customers': customers})
 
 @login_required
 def customer_detail(request, pk):
-    # Ensure the customer belongs to the logged-in user
     customer = get_object_or_404(Customer, pk=pk, tailor=request.user)
     return render(request, 'tailor_app/customer_detail.html', {'customer': customer})
 
@@ -51,9 +106,9 @@ def add_customer(request):
         form = CustomerForm(request.POST)
         if form.is_valid():
             customer = form.save(commit=False)
-            customer.tailor = request.user # Assign the current user as the tailor
+            customer.tailor = request.user
             customer.save()
-            return redirect('customer_detail', pk=customer.pk)
+            return redirect('tailor_app:customer_detail', pk=customer.pk)
     else:
         form = CustomerForm()
     return render(request, 'tailor_app/add_customer.html', {'form': form})
@@ -65,15 +120,13 @@ def edit_customer(request, pk):
         form = CustomerForm(request.POST, instance=customer)
         if form.is_valid():
             form.save()
-            return redirect('customer_detail', pk=customer.pk)
+            return redirect('tailor_app:customer_detail', pk=customer.pk)
     else:
         form = CustomerForm(instance=customer)
-    return render(request, 'tailor_app/edit_customer.html', {'form': form})
+    return render(request, 'tailor_app/edit_customer.html', {'form': form, 'customer': customer})
 
-# --- Order Views ---
 @login_required
 def add_order(request, customer_pk):
-    # Ensure the customer belongs to the logged-in user before adding an order
     customer = get_object_or_404(Customer, pk=customer_pk, tailor=request.user)
     if request.method == 'POST':
         form = OrderForm(request.POST)
@@ -81,49 +134,49 @@ def add_order(request, customer_pk):
             order = form.save(commit=False)
             order.customer = customer
             order.save()
-            return redirect('order_detail', pk=order.pk)
+            return redirect('tailor_app:order_detail', pk=order.pk)
     else:
         form = OrderForm()
     return render(request, 'tailor_app/add_order.html', {'form': form, 'customer': customer})
 
 @login_required
 def order_detail(request, pk):
-    # Ensure the order belongs to a customer of the logged-in user
     order = get_object_or_404(Order, pk=pk, customer__tailor=request.user)
     image_form = OrderImageForm()
     if request.method == 'POST':
-        form = OrderImageForm(request.POST, request.FILES)
-        if form.is_valid():
-            image_instance = form.save(commit=False)
-            image_instance.order = order
-            image_instance.save()
-            return redirect('order_detail', pk=order.pk)
-    context = {'order': order, 'image_form': image_form}
-    return render(request, 'tailor_app/order_detail.html', context)
+        image_form = OrderImageForm(request.POST, request.FILES)
+        if image_form.is_valid():
+            order_image = image_form.save(commit=False)
+            order_image.order = order
+            order_image.save()
+            return redirect('tailor_app:order_detail', pk=order.pk)
+            
+    return render(request, 'tailor_app/order_detail.html', {'order': order, 'image_form': image_form})
 
 @login_required
-def edit_order(request, pk):
-    order = get_object_or_404(Order, pk=pk, customer__tailor=request.user)
+def edit_order(request, order_id):
+    order = get_object_or_404(Order, pk=order_id, customer__tailor=request.user)
+    
     if request.method == 'POST':
         form = OrderForm(request.POST, instance=order)
-        if form.is_valid():
+        material_formset = OrderMaterialFormSet(request.POST, instance=order)
+        
+        if form.is_valid() and material_formset.is_valid():
+            # ... stock deduction logic can be added here
             form.save()
-            return redirect('order_detail', pk=order.pk)
+            material_formset.save()
+            return redirect('tailor_app:order_detail', order_id=order.id)
     else:
         form = OrderForm(instance=order)
-    return render(request, 'tailor_app/edit_order.html', {'form': form})
+        material_formset = OrderMaterialFormSet(instance=order)
+        
+    context = {
+        'form': form,
+        'material_formset': material_formset, # Add formset to context
+        'order': order
+    }
+    return render(request, 'tailor_app/edit_order.html', context)
 
-@login_required
-def delete_order_image(request, pk):
-    # Ensure the image belongs to an order of the logged-in user
-    image = get_object_or_404(OrderImage, pk=pk, order__customer__tailor=request.user)
-    order_pk = image.order.pk
-    if request.method == 'POST':
-        image.image.delete()
-        image.delete()
-    return redirect('order_detail', pk=order_pk)
-
-# --- Measurement Views ---
 @login_required
 def add_measurement(request, customer_pk):
     customer = get_object_or_404(Customer, pk=customer_pk, tailor=request.user)
@@ -133,7 +186,7 @@ def add_measurement(request, customer_pk):
             measurement = form.save(commit=False)
             measurement.customer = customer
             measurement.save()
-            return redirect('customer_detail', pk=customer.pk)
+            return redirect('tailor_app:customer_detail', pk=customer.pk)
     else:
         form = MeasurementForm()
     return render(request, 'tailor_app/measurement_form.html', {'form': form, 'customer': customer})
@@ -146,7 +199,7 @@ def edit_measurement(request, pk):
         form = MeasurementForm(request.POST, instance=measurement)
         if form.is_valid():
             form.save()
-            return redirect('customer_detail', pk=customer.pk)
+            return redirect('tailor_app:customer_detail', pk=customer.pk)
     else:
         form = MeasurementForm(instance=measurement)
     return render(request, 'tailor_app/measurement_form.html', {'form': form, 'customer': customer})
@@ -157,6 +210,176 @@ def delete_measurement(request, pk):
     customer_pk = measurement.customer.pk
     if request.method == 'POST':
         measurement.delete()
-        return redirect('customer_detail', pk=customer_pk)
+        return redirect('tailor_app:customer_detail', pk=customer_pk)
     return render(request, 'tailor_app/confirm_delete.html', {'object': measurement})
+
+@login_required
+def generate_pdf_invoice(request, order_pk):
+    order = get_object_or_404(Order, pk=order_pk, customer__tailor=request.user)
+    template = get_template('tailor_app/invoice_template.html')
+    html = template.render({'order': order})
+
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="invoice_{order.id}.pdf"'
+    
+    HTML(string=html).write_pdf(response)
+    
+    return response
+
+@login_required
+def invite_customer_to_portal(request, customer_pk):
+    customer = get_object_or_404(Customer, pk=customer_pk, tailor=request.user)
+    if not customer.client_account:
+        # Generate a secure temporary password
+        temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+        
+        # Create a username (ensure it's unique)
+        base_username = f"{customer.name.split(' ')[0].lower()}{customer.pk}"
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+
+        # Create the user account
+        user = User.objects.create_user(username=username, password=temp_password, email=customer.email)
+        
+        # Link the new user account to the customer profile
+        customer.client_account = user
+        customer.save()
+
+        # Display the temporary credentials to the tailor
+        messages.success(request, f"Client account created for {customer.name}. Username: '{username}', Temporary Password: '{temp_password}'. Please share these credentials securely with your client.")
+    else:
+        messages.info(request, "This customer already has a client portal account.")
+        
+    return redirect('tailor_app:customer_detail', pk=customer.pk)
+
+@login_required
+def calendar_view(request):
+    form = AppointmentForm()
+    # We can pre-fill the customer dropdown for the tailor
+    form.fields['customer'].queryset = Customer.objects.filter(tailor=request.user)
+    return render(request, 'tailor_app/calendar.html', {'form': form})
+
+@login_required
+def calendar_events_api(request):
+    # Fetch order due dates
+    orders = Order.objects.filter(customer__tailor=request.user)
+    order_events = [
+        {
+            'title': f"Due: {order.item}",
+            'start': order.due_date.isoformat(),
+            'allDay': True,
+            'backgroundColor': '#dc3545', # Red for deadlines
+            'borderColor': '#dc3545',
+            'url': reverse('tailor_app:order_detail', args=[order.pk])
+        } for order in orders
+    ]
+    
+    # Fetch appointments
+    appointments = Appointment.objects.filter(tailor=request.user)
+    appointment_events = []
+    for appointment in appointments:
+        # Set color based on status
+        if appointment.status == 'Confirmed':
+            color = '#0d6efd' # Blue
+        elif appointment.status == 'Requested':
+            color = '#ffc107' # Yellow
+        else:
+            color = '#6c757d' # Grey for cancelled/completed
+            
+        appointment_events.append({
+            'title': appointment.title,
+            'start': appointment.start_time.isoformat(),
+            'end': appointment.end_time.isoformat(),
+            'backgroundColor': color,
+            'borderColor': color,
+            'extendedProps': { 'notes': appointment.notes }
+        })
+    
+    events = order_events + appointment_events
+    return JsonResponse(events, safe=False)
+
+@login_required
+def add_appointment(request):
+    if request.method == 'POST':
+        form = AppointmentForm(request.POST)
+        if form.is_valid():
+            appointment = form.save(commit=False)
+            appointment.tailor = request.user
+            appointment.save()
+            return redirect('tailor_app:calendar')
+    # If form is not valid or method is not POST, redirect to calendar
+    return redirect('tailor_app:calendar')
+
+@login_required
+def update_appointment_status(request, appointment_id, new_status):
+    appointment = get_object_or_404(Appointment, pk=appointment_id, tailor=request.user)
+    if new_status in ['Confirmed', 'Cancelled']: # Add any other statuses you want to allow
+        appointment.status = new_status
+        appointment.save()
+    return redirect('tailor_app:dashboard')
+
+# ----- Inventory Views -----
+@login_required
+def inventory_list(request):
+    items = InventoryItem.objects.filter(tailor=request.user)
+    return render(request, 'tailor_app/inventory_list.html', {'items': items})
+
+@login_required
+def add_inventory_item(request):
+    if request.method == 'POST':
+        form = InventoryItemForm(request.POST, user=request.user)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.tailor = request.user
+            item.save()
+            return redirect('tailor_app:inventory_list')
+    else:
+        form = InventoryItemForm(user=request.user)
+    return render(request, 'tailor_app/inventory_form.html', {'form': form})
+
+@login_required
+def edit_inventory_item(request, item_id):
+    item = get_object_or_404(InventoryItem, pk=item_id, tailor=request.user)
+    if request.method == 'POST':
+        form = InventoryItemForm(request.POST, instance=item, user=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('tailor_app:inventory_list')
+    else:
+        form = InventoryItemForm(instance=item, user=request.user)
+    return render(request, 'tailor_app/inventory_form.html', {'form': form, 'item': item})
+
+# ----- Supplier Views -----
+@login_required
+def supplier_list(request):
+    suppliers = Supplier.objects.filter(tailor=request.user)
+    return render(request, 'tailor_app/supplier_list.html', {'suppliers': suppliers})
+
+@login_required
+def add_supplier(request):
+    if request.method == 'POST':
+        form = SupplierForm(request.POST)
+        if form.is_valid():
+            supplier = form.save(commit=False)
+            supplier.tailor = request.user
+            supplier.save()
+            return redirect('tailor_app:supplier_list')
+    else:
+        form = SupplierForm()
+    return render(request, 'tailor_app/supplier_form.html', {'form': form})
+
+@login_required
+def edit_supplier(request, supplier_id):
+    supplier = get_object_or_404(Supplier, pk=supplier_id, tailor=request.user)
+    if request.method == 'POST':
+        form = SupplierForm(request.POST, instance=supplier)
+        if form.is_valid():
+            form.save()
+            return redirect('tailor_app:supplier_list')
+    else:
+        form = SupplierForm(instance=supplier)
+    return render(request, 'tailor_app/supplier_form.html', {'form': form, 'supplier': supplier})
 

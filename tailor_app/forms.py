@@ -1,46 +1,71 @@
+# tailor_app/forms.py
+
 from django import forms
-from .models import Customer, Order, Measurement, OrderImage
+from .models import Customer, Order, Measurement, OrderImage, Appointment, Supplier, InventoryItem, OrderMaterial
+from django.forms import inlineformset_factory
 
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
         fields = ['name', 'phone', 'email', 'address']
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-        }
 
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['garment_type', 'fabric_details', 'due_date', 'status', 'price', 'amount_paid', 'notes']
+        fields = ['item', 'status', 'due_date', 'notes', 'price', 'amount_paid', 'fabric_details']
         widgets = {
-            'garment_type': forms.TextInput(attrs={'class': 'form-control'}),
-            'fabric_details': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'status': forms.Select(attrs={'class': 'form-select'}),
-            'price': forms.NumberInput(attrs={'class': 'form-control'}),
-            'amount_paid': forms.NumberInput(attrs={'class': 'form-control'}),
-            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-        }
-
-class OrderImageForm(forms.ModelForm):
-    class Meta:
-        model = OrderImage
-        fields = ['image', 'caption']
-        widgets = {
-            'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
-            'caption': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional caption'}),
+            'due_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
 class MeasurementForm(forms.ModelForm):
     class Meta:
         model = Measurement
         fields = ['name', 'value']
+
+class OrderImageForm(forms.ModelForm):
+    class Meta:
+        model = OrderImage
+        fields = ['image', 'caption']
+
+class AppointmentForm(forms.ModelForm):
+    class Meta:
+        model = Appointment
+        fields = ['customer', 'title', 'start_time', 'end_time', 'notes']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Chest, Waist, Inseam'}),
-            'value': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g., 38.5'}),
+            'start_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'end_time': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
         }
+
+class SupplierForm(forms.ModelForm):
+    class Meta:
+        model = Supplier
+        fields = ['name', 'contact_person', 'email', 'phone']
+        widgets = { # Add some bootstrap classes
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'contact_person': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class InventoryItemForm(forms.ModelForm):
+    class Meta:
+        model = InventoryItem
+        fields = ['name', 'supplier', 'quantity_in_stock', 'cost_per_unit', 'reorder_level']
+    
+    def __init__(self, *args, **kwargs):
+        # Filter the supplier dropdown to only show suppliers belonging to the current user
+        user = kwargs.pop('user', None)
+        super(InventoryItemForm, self).__init__(*args, **kwargs)
+        if user:
+            self.fields['supplier'].queryset = Supplier.objects.filter(tailor=user)
+
+
+# Create a formset for linking materials to an order
+OrderMaterialFormSet = inlineformset_factory(
+    Order, 
+    OrderMaterial,
+    fields=('material', 'quantity_used'),
+    extra=1, # Show one extra form by default
+    can_delete=True
+)
 

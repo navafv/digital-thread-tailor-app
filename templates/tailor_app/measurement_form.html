@@ -1,0 +1,11 @@
+<!-- tailor_app/templates/tailor_app/measurement_form.html -->
+{% extends 'tailor_app/base.html' %}
+{% block content %}
+<h2>Measurement for {{ customer.name }}</h2>
+<form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Save Measurement</button>
+</form>
+{% endblock %}
+

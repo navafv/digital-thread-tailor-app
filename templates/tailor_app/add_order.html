@@ -1,0 +1,11 @@
+<!-- tailor_app/templates/tailor_app/add_order.html -->
+{% extends 'tailor_app/base.html' %}
+{% block content %}
+<h2>Add New Order for {{ customer.name }}</h2>
+<form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Save Order</button>
+</form>
+{% endblock %}
+

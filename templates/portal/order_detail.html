@@ -1,0 +1,19 @@
+<!-- portal/templates/portal/order_detail.html -->
+{% extends 'portal/base.html' %}
+{% block content %}
+<h1 class="h2 mb-4">Order #{{ order.id }} Details</h1>
+<div class="card">
+    <div class="card-header">
+        <h5>{{ order.item }}</h5>
+    </div>
+    <div class="card-body">
+        <p><strong>Description:</strong> {{ order.description }}</p>
+        <p><strong>Status:</strong> <span class="badge bg-primary">{{ order.status }}</span></p>
+        <p><strong>Due Date:</strong> {{ order.due_date|date:"F d, Y" }}</p>
+        <hr>
+        <p><strong>Total Price:</strong> ${{ order.price|floatformat:2 }}</p>
+        <p><strong>Amount Paid:</strong> ${{ order.amount_paid|floatformat:2 }}</p>
+        <p><strong>Balance Due:</strong> ${{ order.balance_due|floatformat:2 }}</p>
+    </div>
+</div>
+{% endblock %}

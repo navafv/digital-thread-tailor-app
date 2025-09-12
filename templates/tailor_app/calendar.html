@@ -1,0 +1,63 @@
+<!-- tailor_app/templates/tailor_app/calendar.html -->
+{% extends 'tailor_app/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">My Schedule</h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addAppointmentModal">
+      + New Appointment
+    </button>
+</div>
+
+<!-- Add Appointment Modal -->
+<div class="modal fade" id="addAppointmentModal" tabindex="-1" aria-labelledby="addAppointmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addAppointmentModalLabel">Create New Appointment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="appointmentForm" action="{% url 'tailor_app:add_appointment' %}" method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success w-100">Save Appointment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id='calendar'></div>
+<br><br><br>
+{% endblock %}
+
+{% block extra_js %}
+<!-- This script tag loads the FullCalendar library -->
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        },
+        events: "{% url 'tailor_app:calendar_events_api' %}",
+        editable: true, // Allows dragging and resizing events
+        selectable: true, // Allows clicking and dragging to select a time range
+        select: function(info) {
+            // Pre-fill the modal form with the selected start/end times
+            const modal = new bootstrap.Modal(document.getElementById('addAppointmentModal'));
+            document.getElementById('id_start_time').value = info.startStr.slice(0, 16);
+            document.getElementById('id_end_time').value = info.endStr.slice(0, 16);
+            modal.show();
+        }
+    });
+    calendar.render();
+});
+</script>
+{% endblock %}
+

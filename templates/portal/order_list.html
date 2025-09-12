@@ -1,0 +1,18 @@
+<!-- portal/templates/portal/order_list.html -->
+{% extends 'portal/base.html' %}
+{% block content %}
+<h1 class="h2 mb-4">My Orders</h1>
+<div class="list-group">
+    {% for order in orders %}
+        <a href="{% url 'portal:order_detail' order.pk %}" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">Order #{{ order.id }}: {{ order.item }}</h5>
+                <small>Due: {{ order.due_date|date:"Y-m-d" }}</small>
+            </div>
+            <p class="mb-1">Status: <span class="badge bg-info">{{ order.status }}</span> | Balance Due: ${{ order.balance_due|floatformat:2 }}</p>
+        </a>
+    {% empty %}
+        <p>You have no orders.</p>
+    {% endfor %}
+</div>
+{% endblock %}

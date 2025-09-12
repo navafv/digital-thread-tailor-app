@@ -1,25 +1,25 @@
+<!-- accounts/templates/accounts/login.html -->
 {% extends 'tailor_app/base.html' %}
 
-{% block title %}Sign Up{% endblock %}
-
 {% block content %}
-<div class="row justify-content-center">
+<div class="row justify-content-center mt-5">
     <div class="col-md-6">
         <div class="card">
             <div class="card-header">
-                <h2>Create an Account</h2>
+                <h3 class="text-center">Log In</h3>
             </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" novalidate>
                     {% csrf_token %}
                     {{ form.as_p }}
-                    <button type="submit" class="btn btn-primary w-100">Sign Up</button>
+                    <button type="submit" class="btn btn-primary w-100">Log In</button>
                 </form>
             </div>
             <div class="card-footer text-center">
-                <p>Already have an account? <a href="{% url 'login' %}">Log In</a></p>
+                <p>Don't have an account? <a href="{% url 'accounts:signup' %}">Sign Up</a></p>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+

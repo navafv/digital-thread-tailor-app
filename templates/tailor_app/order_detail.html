@@ -1,0 +1,70 @@
+<!-- tailor_app/templates/tailor_app/order_detail.html -->
+{% extends 'tailor_app/base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Order #{{ order.id }} for {{ order.customer.name }}</h1>
+    <div>
+        <a href="{% url 'tailor_app:generate_pdf_invoice' order.pk %}" class="btn btn-success">Download PDF Invoice</a>
+        <a href="{% url 'tailor_app:edit_order' order.pk %}" class="btn btn-secondary">Edit Order</a>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Order Details -->
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Order Details</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Item:</strong> {{ order.item }}</p>
+                <p><strong>Description:</strong> {{ order.description }}</p>
+                <p><strong>Status:</strong> <span class="badge bg-primary">{{ order.status }}</span></p>
+                <p><strong>Due Date:</strong> {{ order.due_date|date:"F d, Y" }}</p>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Financials</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Price:</strong> ${{ order.price|floatformat:2 }}</p>
+                <p><strong>Amount Paid:</strong> ${{ order.amount_paid|floatformat:2 }}</p>
+                <hr>
+                <p><strong>Balance Due:</strong> ${{ order.balance_due|floatformat:2 }}</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Image Gallery -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Image Gallery</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" class="mb-3">
+                    {% csrf_token %}
+                    {{ image_form.as_p }}
+                    <button type="submit" class="btn btn-primary">Upload Image</button>
+                </form>
+                <hr>
+                <div class="row">
+                    {% for image in order.images.all %}
+                    <div class="col-md-4 mb-3">
+                        <a href="{{ image.image.url }}" target="_blank">
+                            <img src="{{ image.image.url }}" class="img-fluid rounded" alt="{{ image.caption }}">
+                        </a>
+                        <p class="text-muted small mt-1">{{ image.caption }}</p>
+                    </div>
+                    {% empty %}
+                    <p>No images uploaded for this order yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

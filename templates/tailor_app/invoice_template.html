@@ -1,0 +1,174 @@
+<!-- tailor_app/templates/tailor_app/invoice_template.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice #{{ order.id }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #333;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .15);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+        .header .company-details {
+            text-align: right;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin: 0;
+        }
+        .billing-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+        .billing-details .billed-to {
+            max-width: 250px;
+        }
+        .billing-details .invoice-info {
+            text-align: right;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+        }
+        .items-table th, .items-table td {
+            border-bottom: 1px solid #eee;
+            padding: 10px 5px;
+            text-align: left;
+        }
+        .items-table thead th {
+            background-color: #f7f7f7;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            color: #555;
+        }
+        .items-table .total {
+            font-weight: bold;
+        }
+        .items-table .text-right {
+            text-align: right;
+        }
+        .summary {
+            display: flex;
+            justify-content: flex-end;
+        }
+        .summary table {
+            width: 300px;
+        }
+        .summary td {
+            padding: 8px;
+        }
+        .summary .label {
+            font-weight: bold;
+        }
+        .summary .balance-due {
+            font-size: 1.2em;
+            font-weight: bold;
+            background-color: #f7f7f7;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #777;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-box">
+        <!-- Header: Logo and Company Details -->
+        <div class="header">
+            <div>
+                <!-- You can replace this with an <img> tag for your logo -->
+                <h1 style="font-size: 1.5em; font-weight: bold;">Your Tailor Shop</h1>
+            </div>
+            <div class="company-details">
+                <strong>Your Tailor Shop Inc.</strong><br>
+                123 Design Lane<br>
+                Fashion City, 12345<br>
+                contact@yourtailorshop.com
+            </div>
+        </div>
+
+        <!-- Billing To and Invoice Info -->
+        <div class="billing-details">
+            <div class="billed-to">
+                <strong>Billed To</strong><br>
+                {{ order.customer.name }}<br>
+                {% if order.customer.email %}{{ order.customer.email }}<br>{% endif %}
+                {{ order.customer.phone }}
+            </div>
+            <div class="invoice-info">
+                <strong>Invoice #{{ order.id }}</strong><br>
+                <strong>Date Issued:</strong> {{ order.created_at|date:"F d, Y" }}<br>
+                <strong>Due Date:</strong> {{ order.due_date|date:"F d, Y" }}
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Item Description</th>
+                    <th class="text-right">Quantity</th>
+                    <th class="text-right">Unit Price</th>
+                    <th class="text-right">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ order.item }}</td>
+                    <td class="text-right">1</td>
+                    <td class="text-right">${{ order.price|floatformat:2 }}</td>
+                    <td class="text-right total">${{ order.price|floatformat:2 }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Financial Summary -->
+        <div class="summary">
+            <table>
+                <tr>
+                    <td class="label">Subtotal</td>
+                    <td class="text-right">${{ order.price|floatformat:2 }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Amount Paid</td>
+                    <td class="text-right">-${{ order.amount_paid|floatformat:2 }}</td>
+                </tr>
+                <tr class="balance-due">
+                    <td class="label">Balance Due</td>
+                    <td class="text-right">${{ order.balance_due|floatformat:2 }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Notes / Payment Terms</strong></p>
+            <p>Thank you for your business! Please make payment within 30 days.</p>
+        </div>
+    </div>
+</body>
+</html>
+
