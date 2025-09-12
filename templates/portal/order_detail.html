@@ -1,19 +1,59 @@
 <!-- portal/templates/portal/order_detail.html -->
 {% extends 'portal/base.html' %}
+{% block title %}Order #{{ order.id }}{% endblock %}
+
 {% block content %}
-<h1 class="h2 mb-4">Order #{{ order.id }} Details</h1>
-<div class="card">
-    <div class="card-header">
-        <h5>{{ order.item }}</h5>
-    </div>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Order #{{ order.id }}: {{ order.item }}</h1>
+    <span class="badge rounded-pill text-bg-primary fs-6">{{ order.status }}</span>
+</div>
+
+<div class="card shadow-sm border-0">
     <div class="card-body">
-        <p><strong>Description:</strong> {{ order.description }}</p>
-        <p><strong>Status:</strong> <span class="badge bg-primary">{{ order.status }}</span></p>
-        <p><strong>Due Date:</strong> {{ order.due_date|date:"F d, Y" }}</p>
-        <hr>
-        <p><strong>Total Price:</strong> ${{ order.price|floatformat:2 }}</p>
-        <p><strong>Amount Paid:</strong> ${{ order.amount_paid|floatformat:2 }}</p>
-        <p><strong>Balance Due:</strong> ${{ order.balance_due|floatformat:2 }}</p>
+        <div class="row">
+            <div class="col-md-8">
+                <h5 class="card-title">Order Information</h5>
+                <p><strong>Due Date:</strong> {{ order.due_date|date:"F d, Y" }}</p>
+                <p><strong>Notes from your tailor:</strong> {{ order.notes|default:"No notes provided." }}</p>
+            </div>
+            <div class="col-md-4">
+                <h5 class="card-title">Financials</h5>
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Total Price:</span>
+                        <strong>${{ order.price|floatformat:2 }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Amount Paid:</span>
+                        <strong>${{ order.amount_paid|floatformat:2 }}</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between bg-light">
+                        <span>Balance Due:</span>
+                        <strong class="text-danger">${{ order.balance_due|floatformat:2 }}</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
+
+{% if order.tasks.all %}
+<div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-light border-0">
+        <h4 class="mb-0">Order Progress</h4>
+    </div>
+    <div class="card-body">
+        {% for task in order.tasks.all %}
+            <div class="form-check fs-5">
+                <input class="form-check-input" type="checkbox" value="" id="task-{{task.id}}" {% if task.is_completed %}checked{% endif %} disabled>
+                <label class="form-check-label {% if task.is_completed %}text-decoration-line-through text-muted{% endif %}" for="task-{{task.id}}">
+                    {{ task.task_definition.name }}
+                </label>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}
+

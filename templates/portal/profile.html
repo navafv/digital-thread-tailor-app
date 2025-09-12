@@ -1,31 +1,47 @@
 <!-- portal/templates/portal/profile.html -->
 {% extends 'portal/base.html' %}
+{% block title %}My Profile{% endblock %}
+
 {% block content %}
-<h1 class="h2 mb-4">My Profile</h1>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">My Profile</h1>
+</div>
 <div class="row">
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header"><h5>My Contact Information</h5></div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light border-0">
+                <h5 class="mb-0 d-flex align-items-center">
+                    <i data-feather="info" class="me-2"></i> My Contact Information
+                </h5>
+            </div>
             <div class="card-body">
                 <p><strong>Name:</strong> {{ customer.name }}</p>
                 <p><strong>Phone:</strong> {{ customer.phone }}</p>
-                <p><strong>Email:</strong> {{ customer.email|default:"N/A" }}</p>
+                <p><strong>Email:</strong> {{ customer.email|default:"Not provided" }}</p>
+                <p><strong>Address:</strong> {{ customer.address|default:"Not provided" }}</p>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header"><h5>My Measurements on File</h5></div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light border-0">
+                <h5 class="mb-0 d-flex align-items-center">
+                    <i data-feather="tool" class="me-2"></i> My Measurements on File
+                </h5>
+            </div>
             <ul class="list-group list-group-flush">
                 {% for measurement in measurements %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
                     <strong>{{ measurement.name }}:</strong> {{ measurement.value }}
                 </li>
                 {% empty %}
-                <li class="list-group-item">No measurements on file.</li>
+                <li class="list-group-item text-center p-4">
+                    <p class="text-muted mb-0">No measurements on file.</p>
+                </li>
                 {% endfor %}
             </ul>
         </div>
     </div>
 </div>
 {% endblock %}
+

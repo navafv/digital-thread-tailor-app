@@ -116,3 +116,38 @@ class OrderMaterial(models.Model):
     class Meta:
         unique_together = ('order', 'material')
 
+class WorkflowTemplate(models.Model):
+    """ A reusable template of tasks for a type of garment. """
+    tailor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='workflow_templates')
+    name = models.CharField(max_length=100, help_text="e.g., 'Standard Suit Workflow', 'Wedding Dress'")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class TaskDefinition(models.Model):
+    """ A single task definition within a workflow template. """
+    template = models.ForeignKey(WorkflowTemplate, on_delete=models.CASCADE, related_name='tasks')
+    name = models.CharField(max_length=200, help_text="e.g., 'Cut Fabric', 'First Fitting'")
+    order = models.PositiveIntegerField(default=0, help_text="Order in which the task should be performed.")
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.name
+
+class OrderTask(models.Model):
+    """ An instance of a task for a specific order. """
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='tasks')
+    task_definition = models.ForeignKey(TaskDefinition, on_delete=models.CASCADE)
+    is_completed = models.BooleanField(default=False)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['task_definition__order']
+
+    def __str__(self):
+        return f"{self.task_definition.name} for Order {self.order.id}"
+

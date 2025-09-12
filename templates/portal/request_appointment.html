@@ -1,15 +1,30 @@
 <!-- portal/templates/portal/request_appointment.html -->
 {% extends 'portal/base.html' %}
+{% block title %}Request Appointment{% endblock %}
 
 {% block content %}
-<h2 class="mb-4">Request a New Appointment</h2>
-<div class="card">
-    <div class="card-body">
-        <form method="post">
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Request an Appointment</h1>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <form method="post" novalidate>
             {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" class="btn btn-success w-100">Submit Request</button>
+            {% for field in form %}
+                <div class="form-floating mb-3">
+                    {{ field }}
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                </div>
+                {% if field.errors %}
+                    <div class="alert alert-danger p-2">
+                        {{ field.errors.as_text }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+            <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">Submit Request</button>
         </form>
     </div>
 </div>
 {% endblock %}
+

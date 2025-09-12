@@ -1,25 +1,30 @@
 <!-- accounts/templates/accounts/login.html -->
-{% extends 'tailor_app/base.html' %}
+{% extends 'accounts/base_accounts.html' %}
+
+{% block title %}Log In - The Digital Thread{% endblock %}
+{% block card_title %}Welcome back! Please log in.{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h3 class="text-center">Log In</h3>
-            </div>
-            <div class="card-body">
-                <form method="post" novalidate>
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-primary w-100">Log In</button>
-                </form>
-            </div>
-            <div class="card-footer text-center">
-                <p>Don't have an account? <a href="{% url 'accounts:signup' %}">Sign Up</a></p>
-            </div>
-        </div>
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    {% for field in form %}
+    <div class="form-floating mb-3">
+        {{ field }}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
     </div>
-</div>
+    {% if field.errors %}
+        <div class="alert alert-danger p-2">
+            {{ field.errors.as_text }}
+        </div>
+    {% endif %}
+    {% endfor %}
+
+    <button type="submit" class="btn btn-primary w-100 btn-lg mt-3">Log In</button>
+
+    <div class="text-center mt-4">
+        <p class="text-muted">Don't have an account? <a href="{% url 'accounts:signup' %}">Sign Up</a></p>
+    </div>
+</form>
 {% endblock %}
 

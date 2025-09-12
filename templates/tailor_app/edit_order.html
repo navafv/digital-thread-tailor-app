@@ -1,21 +1,41 @@
 <!-- tailor_app/templates/tailor_app/edit_order.html -->
 {% extends 'tailor_app/base.html' %}
+{% block title %}Edit Order #{{ order.id }}{% endblock %}
+
 {% block content %}
-<h2>Edit Order #{{ order.id }} for {{ order.customer.name }}</h2>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Edit Order #{{ order.id }}</h1>
+</div>
+
 <form method="post" novalidate>
     {% csrf_token %}
-    {{ form.as_p }}
-    <hr>
-    <h4>Materials Used</h4>
-    {{ material_formset.management_form }}
-    {% for form in material_formset %}
-        <div class="row align-items-center mb-2">
-            <div class="col-md-6">{{ form.material }}</div>
-            <div class="col-md-4">{{ form.quantity_used }}</div>
-            <div class="col-md-2">{{ form.DELETE }}</div>
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light border-0"><h5 class="mb-0">Order Details</h5></div>
+        <div class="card-body">
+             {% for field in form %}
+                <div class="form-floating mb-3">
+                    {{ field }}
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                </div>
+            {% endfor %}
         </div>
-    {% endfor %}
-    <button type="submit" class="btn btn-success">Update Order</button>
+    </div>
+    
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light border-0"><h5 class="mb-0">Materials Used</h5></div>
+        <div class="card-body">
+            {{ material_formset.management_form }}
+            {% for form in material_formset %}
+                <div class="row align-items-center mb-2">
+                    <div class="col-md-6">{{ form.material }}</div>
+                    <div class="col-md-4">{{ form.quantity_used }}</div>
+                    <div class="col-md-2">{{ form.DELETE }}</div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg mt-3">Update Order</button>
+    <a href="{% url 'tailor_app:order_detail' order.id %}" class="btn btn-secondary btn-lg mt-3">Cancel</a>
 </form>
 {% endblock %}
-

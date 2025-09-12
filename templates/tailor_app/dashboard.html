@@ -1,89 +1,101 @@
 <!-- tailor_app/templates/tailor_app/dashboard.html -->
 {% extends 'tailor_app/base.html' %}
 
+{% block title %}Dashboard{% endblock %}
+
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
     <h1 class="h2">Dashboard</h1>
 </div>
 
+<!-- Stat Cards -->
 <div class="row">
-    <div class="col-md-3">
-        <div class="card text-white bg-primary mb-3">
-            <div class="card-header">Total Customers</div>
-            <div class="card-body">
-                <h5 class="card-title">{{ total_customers }}</h5>
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Total Customers</h6>
+                <h2 class="card-title fw-bold">{{ total_customers }}</h2>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-warning mb-3">
-            <div class="card-header">Pending Orders</div>
-            <div class="card-body">
-                <h5 class="card-title">{{ pending_orders }}</h5>
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Pending Orders</h6>
+                <h2 class="card-title fw-bold text-warning">{{ pending_orders }}</h2>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-success mb-3">
-            <div class="card-header">Completed This Month</div>
-            <div class="card-body">
-                <h5 class="card-title">{{ completed_orders_this_month }}</h5>
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Completed This Month</h6>
+                <h2 class="card-title fw-bold text-success">{{ completed_orders_this_month }}</h2>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card text-white bg-danger mb-3">
-            <div class="card-header">Outstanding Revenue</div>
-            <div class="card-body">
-                <h5 class="card-title">${{ outstanding_revenue|floatformat:2 }}</h5>
+    <div class="col-md-3 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <h6 class="card-subtitle mb-2 text-muted">Outstanding Revenue</h6>
+                <h2 class="card-title fw-bold text-danger">${{ outstanding_revenue|floatformat:2 }}</h2>
             </div>
         </div>
     </div>
 </div>
 
-<!-- New Pending Requests Panel -->
-{% if pending_requests %}
-<div class="card mt-4">
-  <div class="card-header bg-warning">
-    <h5 class="mb-0 text-dark">Pending Appointment Requests</h5>
-  </div>
-  <div class="list-group list-group-flush">
-    {% for req in pending_requests %}
-      <div class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-            <strong>{{ req.title }}</strong> for {{ req.customer.name }}<br>
-            <small class="text-muted">{{ req.start_time|date:"F d, Y, P" }}</small>
+<div class="row">
+    <!-- Pending Requests & Low Stock -->
+    <div class="col-lg-5">
+        {% if pending_requests %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-warning-subtle border-0">
+                <h5 class="mb-0 text-warning-emphasis d-flex align-items-center"><i data-feather="clock" class="me-2"></i> Pending Requests</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for req in pending_requests %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>{{ req.title }}</strong> for {{ req.customer.name }}<br>
+                        <small class="text-muted">{{ req.start_time|date:"F d, Y, P" }}</small>
+                    </div>
+                    <div>
+                        <a href="{% url 'tailor_app:update_appointment_status' req.id 'Confirmed' %}" class="btn btn-sm btn-success">Confirm</a>
+                        <a href="{% url 'tailor_app:update_appointment_status' req.id 'Cancelled' %}" class="btn btn-sm btn-danger ms-1">Deny</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
-        <div>
-            <a href="{% url 'tailor_app:update_appointment_status' req.id 'Confirmed' %}" class="btn btn-sm btn-success">Confirm</a>
-            <a href="{% url 'tailor_app:update_appointment_status' req.id 'Cancelled' %}" class="btn btn-sm btn-danger">Deny</a>
+        {% endif %}
+
+        {% if low_stock_items %}
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-danger-subtle border-0">
+                <h5 class="mb-0 text-danger-emphasis d-flex align-items-center"><i data-feather="alert-triangle" class="me-2"></i> Low Stock Alerts</h5>
+            </div>
+            <div class="list-group list-group-flush">
+                {% for item in low_stock_items %}
+                <a href="{% url 'tailor_app:edit_inventory_item' item.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    {{ item.name }}
+                    <span class="badge bg-danger rounded-pill">{{ item.quantity_in_stock }} left</span>
+                </a>
+                {% endfor %}
+            </div>
         </div>
-      </div>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
+        {% endif %}
+    </div>
 
-{% if low_stock_items %}
-<div class="card mt-4">
-  <div class="card-header bg-danger text-white">
-    <h5 class="mb-0">Low Stock Alerts</h5>
-  </div>
-  <div class="list-group list-group-flush">
-    {% for item in low_stock_items %}
-      <a href="{% url 'tailor_app:edit_inventory_item' item.id %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-        {{ item.name }}
-        <span class="badge bg-danger rounded-pill">{{ item.quantity_in_stock }} in stock</span>
-      </a>
-    {% endfor %}
-  </div>
-</div>
-{% endif %}
-
-<div class="row mt-4">
-    <div class="col-md-12">
-        <h3>Monthly Revenue (Last 6 Months)</h3>
-        <canvas id="revenueChart"></canvas>
+    <!-- Chart -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-light border-0">
+                <h5 class="mb-0">Monthly Revenue (Last 6 Months)</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="revenueChart"></canvas>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -92,32 +104,28 @@
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        fetch("{% url 'tailor_app:monthly_revenue_data' %}")
-        .then(response => response.json())
-        .then(data => {
-            const ctx = document.getElementById('revenueChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: data.labels,
-                    datasets: [{
-                        label: 'Revenue ($)',
-                        data: data.values,
-                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        const revenueLabels = {{ revenue_data_keys|safe }};
+        const revenueValues = {{ revenue_data_values|safe }};
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: revenueLabels,
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data: revenueValues,
+                    backgroundColor: 'rgba(13, 110, 253, 0.6)',
+                    borderColor: 'rgba(13, 110, 253, 1)',
+                    borderRadius: 4,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: { y: { beginAtZero: true } },
+                responsive: true,
+                maintainAspectRatio: false
+            }
         });
     });
 </script>

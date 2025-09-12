@@ -1,18 +1,31 @@
 <!-- portal/templates/portal/order_list.html -->
 {% extends 'portal/base.html' %}
+{% block title %}My Orders{% endblock %}
+
 {% block content %}
-<h1 class="h2 mb-4">My Orders</h1>
-<div class="list-group">
-    {% for order in orders %}
-        <a href="{% url 'portal:order_detail' order.pk %}" class="list-group-item list-group-item-action">
-            <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">Order #{{ order.id }}: {{ order.item }}</h5>
-                <small>Due: {{ order.due_date|date:"Y-m-d" }}</small>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">My Orders</h1>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="list-group list-group-flush">
+        {% for order in orders %}
+            <a href="{% url 'portal:order_detail' order.pk %}" class="list-group-item list-group-item-action p-3">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">Order #{{ order.id }}: {{ order.item }}</h5>
+                    <small class="text-muted">Due: {{ order.due_date|date:"Y-m-d" }}</small>
+                </div>
+                <p class="mb-1">
+                    Status: <span class="badge rounded-pill text-bg-primary">{{ order.status }}</span>
+                </p>
+                <small>Balance Due: ${{ order.balance_due|floatformat:2 }}</small>
+            </a>
+        {% empty %}
+            <div class="list-group-item text-center p-5">
+                <p class="text-muted mb-0">You have no orders to display.</p>
             </div>
-            <p class="mb-1">Status: <span class="badge bg-info">{{ order.status }}</span> | Balance Due: ${{ order.balance_due|floatformat:2 }}</p>
-        </a>
-    {% empty %}
-        <p>You have no orders.</p>
-    {% endfor %}
+        {% endfor %}
+    </div>
 </div>
 {% endblock %}
+

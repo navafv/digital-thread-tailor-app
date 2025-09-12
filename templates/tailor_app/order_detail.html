@@ -1,69 +1,99 @@
 <!-- tailor_app/templates/tailor_app/order_detail.html -->
 {% extends 'tailor_app/base.html' %}
+{% block title %}Order #{{ order.id }}{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Order #{{ order.id }} for {{ order.customer.name }}</h1>
     <div>
-        <a href="{% url 'tailor_app:generate_pdf_invoice' order.pk %}" class="btn btn-success">Download PDF Invoice</a>
-        <a href="{% url 'tailor_app:edit_order' order.pk %}" class="btn btn-secondary">Edit Order</a>
+        <h1 class="h2 mb-0">Order #{{ order.id }}: {{ order.item }}</h1>
+        <p class="text-muted">For {{ order.customer.name }}</p>
+    </div>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'tailor_app:generate_pdf_invoice' order.id %}" class="btn btn-success me-2"><i data-feather="download" class="me-1"></i> Download Invoice</a>
+        <a href="{% url 'tailor_app:edit_order' order.id %}" class="btn btn-secondary"><i data-feather="edit-2" class="me-1"></i> Edit Order</a>
     </div>
 </div>
 
 <div class="row">
-    <!-- Order Details -->
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Order Details</h5>
-            </div>
+    <!-- Left Column: Details & Financials -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light border-0"><h5 class="mb-0">Order Details</h5></div>
             <div class="card-body">
-                <p><strong>Item:</strong> {{ order.item }}</p>
-                <p><strong>Description:</strong> {{ order.description }}</p>
-                <p><strong>Status:</strong> <span class="badge bg-primary">{{ order.status }}</span></p>
+                <p><strong>Status:</strong> <span class="badge rounded-pill text-bg-primary">{{ order.status }}</span></p>
                 <p><strong>Due Date:</strong> {{ order.due_date|date:"F d, Y" }}</p>
+                <p><strong>Fabric Details:</strong> {{ order.fabric_details|default:"N/A" }}</p>
+                <p><strong>Notes:</strong> {{ order.notes|default:"N/A" }}</p>
             </div>
         </div>
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>Financials</h5>
-            </div>
-            <div class="card-body">
-                <p><strong>Price:</strong> ${{ order.price|floatformat:2 }}</p>
-                <p><strong>Amount Paid:</strong> ${{ order.amount_paid|floatformat:2 }}</p>
-                <hr>
-                <p><strong>Balance Due:</strong> ${{ order.balance_due|floatformat:2 }}</p>
-            </div>
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light border-0"><h5 class="mb-0">Financials</h5></div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between"><span>Total Price:</span> <strong>${{ order.price|floatformat:2 }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Amount Paid:</span> <strong>${{ order.amount_paid|floatformat:2 }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between bg-light"><span>Balance Due:</span> <strong class="text-danger">${{ order.balance_due|floatformat:2 }}</strong></li>
+            </ul>
         </div>
     </div>
-    
-    <!-- Image Gallery -->
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h5>Image Gallery</h5>
-            </div>
+
+    <!-- Right Column: Image Gallery -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light border-0"><h5 class="mb-0">Image Gallery</h5></div>
             <div class="card-body">
-                <form method="post" enctype="multipart/form-data" class="mb-3">
-                    {% csrf_token %}
-                    {{ image_form.as_p }}
-                    <button type="submit" class="btn btn-primary">Upload Image</button>
-                </form>
-                <hr>
                 <div class="row">
                     {% for image in order.images.all %}
                     <div class="col-md-4 mb-3">
-                        <a href="{{ image.image.url }}" target="_blank">
-                            <img src="{{ image.image.url }}" class="img-fluid rounded" alt="{{ image.caption }}">
-                        </a>
-                        <p class="text-muted small mt-1">{{ image.caption }}</p>
+                        <a href="{{ image.image.url }}" target="_blank"><img src="{{ image.image.url }}" class="img-fluid rounded" alt="{{ image.caption }}"></a>
                     </div>
                     {% empty %}
-                    <p>No images uploaded for this order yet.</p>
+                    <p class="text-muted">No images uploaded for this order yet.</p>
                     {% endfor %}
                 </div>
+                <hr>
+                <h6>Upload New Image</h6>
+                <form method="post" enctype="multipart/form-data" action="{% url 'tailor_app:order_detail' order.id %}">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        {{ image_form.image }}
+                        <button class="btn btn-outline-primary" type="submit">Upload</button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Full Width: Workflow -->
+<div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-light border-0"><h5 class="mb-0">Production Workflow</h5></div>
+    <div class="card-body">
+        {% if order.tasks.exists %}
+        <ul class="list-group list-group-flush">
+            {% for task in order.tasks.all %}
+            <li class="list-group-item d-flex align-items-center">
+                <form action="{% url 'tailor_app:update_task' task.id %}" method="post" class="me-3">
+                    {% csrf_token %}
+                    <input type="checkbox" name="is_completed" class="form-check-input" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %}>
+                </form>
+                <span class="fs-5 {% if task.is_completed %}text-muted text-decoration-line-through{% endif %}">{{ task.task_definition.name }}</span>
+                {% if task.is_completed and task.completed_at %}
+                <small class="ms-auto text-muted">✓ {{ task.completed_at|date:"M d" }}</small>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No workflow has been applied to this order yet.</p>
+        <form action="{% url 'tailor_app:apply_workflow' order.id %}" method="post">
+            {% csrf_token %}
+            <div class="form-floating">
+                {{ apply_workflow_form.template }}
+                <label for="id_template">Select a Workflow Template</label>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Apply Workflow</button>
+        </form>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
