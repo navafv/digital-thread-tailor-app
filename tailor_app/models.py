@@ -1,57 +1,65 @@
 from django.db import models
 from django.utils import timezone
-from django.core.validators import MinValueValidator
-from decimal import Decimal
+from django.contrib.auth.models import User # Import the User model
 
-# Model for a customer
 class Customer(models.Model):
-    name = models.CharField(max_length=200)
-    phone = models.CharField(max_length=15)
+    tailor = models.ForeignKey(User, on_delete=models.CASCADE) # Link to the tailor (user)
+    name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=15, unique=True)
     email = models.EmailField(blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        # A tailor cannot have two customers with the same phone number
+        unique_together = ('tailor', 'phone',)
 
     def __str__(self):
         return self.name
 
-# Model for a measurement associated with a customer (NEW)
-class Measurement(models.Model):
-    customer = models.ForeignKey(Customer, related_name='measurements', on_delete=models.CASCADE)
-    measurement_name = models.CharField(max_length=100, help_text="e.g., Chest, Waist, Sleeve Length")
-    value = models.DecimalField(max_digits=5, decimal_places=2, help_text="Measurement in inches or cm")
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        # Ensure a customer can only have one of each measurement type
-        unique_together = ('customer', 'measurement_name')
-        ordering = ['measurement_name']
-
-    def __str__(self):
-        return f"{self.customer.name} - {self.measurement_name}: {self.value}"
-
-# Model for an order
 class Order(models.Model):
     STATUS_CHOICES = [
         ('New', 'New'),
+        ('Measuring', 'Measuring'),
+        ('Cutting', 'Cutting'),
         ('Stitching', 'Stitching'),
-        ('Ready', 'Ready for Pickup'),
+        ('Fitting', 'Fitting'),
         ('Completed', 'Completed'),
         ('Cancelled', 'Cancelled'),
     ]
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='orders')
     garment_type = models.CharField(max_length=100)
-    fabric_details = models.TextField(blank=True)
-    style_notes = models.TextField(blank=True)
-    order_date = models.DateTimeField(default=timezone.now)
+    fabric_details = models.TextField()
+    order_date = models.DateField(default=timezone.now)
     due_date = models.DateField()
-    price = models.DecimalField(max_digits=8, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
-    amount_paid = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='New')
+    notes = models.TextField(blank=True, null=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     @property
     def balance_due(self):
         return self.price - self.amount_paid
 
     def __str__(self):
-        return f"Order #{self.id} for {self.customer.name}"
+        return f"{self.garment_type} for {self.customer.name}"
+
+class OrderImage(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='order_images/')
+    caption = models.CharField(max_length=100, blank=True)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image for order {self.order.id}"
+
+class Measurement(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='measurements')
+    name = models.CharField(max_length=50) # e.g., Chest, Waist, Inseam
+    value = models.DecimalField(max_digits=5, decimal_places=2) # e.g., 38.5 inches
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name}: {self.value} for {self.customer.name}"
 

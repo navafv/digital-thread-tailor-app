@@ -3,80 +3,67 @@
 {% block title %}{{ customer.name }} | The Digital Thread{% endblock %}
 
 {% block content %}
-<div class="card mb-4">
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h2 class="mb-0">{{ customer.name }}</h2>
-            <a href="{% url 'edit_customer' customer.pk %}" class="btn btn-outline-secondary btn-sm">Edit Details</a>
-        </div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1>{{ customer.name }}</h1>
+        <p class="lead text-muted">
+            <i class="bi bi-telephone"></i> {{ customer.phone }} | <i class="bi bi-envelope"></i> {{ customer.email|default:"N/A" }}
+        </p>
     </div>
-    <div class="card-body">
-        <p><strong>Phone:</strong> {{ customer.phone }}</p>
-        <p><strong>Email:</strong> {{ customer.email|default:"Not provided" }}</p>
-    </div>
+    <a href="{% url 'edit_customer' customer.pk %}" class="btn btn-secondary"><i class="bi bi-pencil-square"></i> Edit Customer</a>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h3 class="mb-0">Measurements</h3>
-            <a href="{% url 'add_measurement' customer.pk %}" class="btn btn-primary btn-sm">Add Measurement</a>
-        </div>
-    </div>
-    <div class="card-body p-0">
-        {% if measurements %}
-            <ul class="list-group list-group-flush">
-                {% for m in measurements %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>
-                        <strong>{{ m.measurement_name }}:</strong>
-                        <span class="ms-2">{{ m.value }} inches</span>
-                    </span>
-                    <div>
-                        <a href="{% url 'edit_measurement' m.pk %}" class="btn btn-outline-secondary btn-sm">Edit</a>
-                        <a href="{% url 'delete_measurement' m.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <div class="p-3">
-                <p class="mb-0">No measurements recorded for this customer yet.</p>
+<div class="row">
+    <!-- Orders Section -->
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>Orders</h4>
+                <a href="{% url 'add_order' customer.pk %}" class="btn btn-success btn-sm"><i class="bi bi-plus-circle"></i> New Order</a>
             </div>
-        {% endif %}
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h3 class="mb-0">Order History</h3>
-            <a href="{% url 'add_order' customer.pk %}" class="btn btn-primary btn-sm">Add New Order</a>
+            <div class="list-group list-group-flush">
+                {% for order in customer.orders.all %}
+                <a href="{% url 'order_detail' order.pk %}" class="list-group-item list-group-item-action">
+                    <strong>{{ order.garment_type }}</strong> - Due: {{ order.due_date|date:"F d, Y" }}
+                    <span class="float-end badge bg-primary">{{ order.status }}</span>
+                </a>
+                {% empty %}
+                <div class="list-group-item">No orders for this customer yet.</div>
+                {% endfor %}
+            </div>
         </div>
     </div>
-    <div class="card-body p-0">
-        <ul class="list-group list-group-flush">
-            {% for order in orders %}
-                <a href="{% url 'order_detail' order.pk %}" class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">{{ order.garment_type }}</h5>
-                        <small>Due: {{ order.due_date|date:"M d, Y" }}</small>
-                    </div>
-                    <p class="mb-1">Order #{{order.id}} placed on {{ order.order_date|date:"M d, Y" }}</p>
-                    <span class="badge 
-                        {% if order.status == 'New' %}bg-secondary
-                        {% elif order.status == 'Stitching' %}bg-warning text-dark
-                        {% elif order.status == 'Ready' %}bg-info text-dark
-                        {% elif order.status == 'Completed' %}bg-success
-                        {% else %}bg-primary
-                        {% endif %}">
-                        {{ order.status }}
+    <!-- Measurements Section -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><h4>Measurements</h4></div>
+            <div class="list-group list-group-flush">
+                {% for m in customer.measurements.all %}
+                <div class="list-group-item">
+                    <strong>{{ m.name }}:</strong> {{ m.value }}
+                    <span class="float-end">
+                        <a href="{% url 'edit_measurement' m.pk %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                        <form action="{% url 'delete_measurement' m.pk %}" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this measurement?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                        </form>
                     </span>
-                </a>
-            {% empty %}
-                <li class="list-group-item">No orders found for this customer.</li>
-            {% endfor %}
-        </ul>
+                </div>
+                {% empty %}
+                <div class="list-group-item">No measurements saved.</div>
+                {% endfor %}
+            </div>
+            <div class="card-footer">
+                <form action="{% url 'add_measurement' customer.pk %}" method="post">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input type="text" name="name" class="form-control" placeholder="Name" required>
+                        <input type="number" step="0.01" name="value" class="form-control" placeholder="Value" required>
+                        <button class="btn btn-secondary" type="submit"><i class="bi bi-plus"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

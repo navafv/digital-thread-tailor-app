@@ -1,41 +1,46 @@
 from django import forms
-from .models import Customer, Order, Measurement
+from .models import Customer, Order, Measurement, OrderImage
 
-# ... CustomerForm and OrderForm remain the same ...
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
-        fields = ['name', 'phone', 'email']
+        fields = ['name', 'phone', 'email', 'address']
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter full name'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter phone number'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter email (optional)'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
 
-# Form for creating new orders
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        # We don't include 'customer' here because it will be set in the view
-        fields = ['garment_type', 'fabric_details', 'style_notes', 'due_date', 'price', 'amount_paid', 'status']
+        fields = ['garment_type', 'fabric_details', 'due_date', 'status', 'price', 'amount_paid', 'notes']
         widgets = {
             'garment_type': forms.TextInput(attrs={'class': 'form-control'}),
             'fabric_details': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'style_notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
             'due_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'status': forms.Select(attrs={'class': 'form-select'}),
             'price': forms.NumberInput(attrs={'class': 'form-control'}),
             'amount_paid': forms.NumberInput(attrs={'class': 'form-control'}),
-            'status': forms.Select(attrs={'class': 'form-select'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
         }
 
+class OrderImageForm(forms.ModelForm):
+    class Meta:
+        model = OrderImage
+        fields = ['image', 'caption']
+        widgets = {
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'caption': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional caption'}),
+        }
 
-# Form for adding/editing measurements (NEW)
 class MeasurementForm(forms.ModelForm):
     class Meta:
         model = Measurement
-        fields = ['measurement_name', 'value']
+        fields = ['name', 'value']
         widgets = {
-            'measurement_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Chest'}),
-            'value': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Inches'}),
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g., Chest, Waist, Inseam'}),
+            'value': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'e.g., 38.5'}),
         }
 

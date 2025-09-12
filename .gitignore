@@ -7,18 +7,12 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 media/
-static/
 
 Environment
 .env
+.venv
 venv/
-.venv/
-env/
 ENV/
-env.bak
-.env.bak
-
-IDE / Editor specific
-.idea/
-.vscode/
-*.swp
+env/
+env.bak/
+venv.bak/
