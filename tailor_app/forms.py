@@ -14,7 +14,7 @@ class BootstrapModelForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             # Add form-control class to all fields
-            field.widget.attrs.setdefault('class', 'form-control')
+            field.widget.attrs.setdefault('class', 'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input')
 
 class CustomerForm(BootstrapModelForm):
     class Meta:
@@ -33,6 +33,14 @@ class MeasurementForm(BootstrapModelForm):
     class Meta:
         model = Measurement
         fields = ['name', 'value']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input'
+            }),
+            'value': forms.TextInput(attrs={
+                'class': 'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input'
+            }),
+        }
 
 class OrderImageForm(BootstrapModelForm):
     class Meta:
@@ -77,8 +85,8 @@ OrderMaterialFormSet = inlineformset_factory(
     extra=1,
     can_delete=True,
     widgets = {
-        'material': forms.Select(attrs={'class': 'form-select'}),
-        'quantity_used': forms.NumberInput(attrs={'class': 'form-control'}),
+        'material': forms.Select(attrs={'class': 'block w-full mt-1 text-sm dark:text-gray-300 dark:border-gray-600 dark:bg-gray-700 form-select focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray'}),
+        'quantity_used': forms.NumberInput(attrs={'class': 'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input'}),
     }
 )
 
@@ -96,8 +104,8 @@ TaskDefinitionFormSet = inlineformset_factory(
     extra=1,
     can_delete=True,
     widgets = {
-        'name': forms.TextInput(attrs={'class': 'form-control'}),
-        'order': forms.NumberInput(attrs={'class': 'form-control'}),
+        'name': forms.TextInput(attrs={'class': 'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input'}),
+        'order': forms.NumberInput(attrs={'class': 'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input'}),
     }
 )
 # --- END OF CORRECTION ---
@@ -107,7 +115,7 @@ class ApplyWorkflowForm(forms.Form):
         queryset=WorkflowTemplate.objects.none(),
         label="Select a Workflow Template",
         empty_label="--- Choose a Template ---",
-        widget=forms.Select(attrs={'class': 'form-select'})
+        widget=forms.Select(attrs={'class': 'block w-full mt-1 text-sm dark:border-gray-600 dark:bg-gray-700 focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:text-gray-300 dark:focus:shadow-outline-gray form-input'})
     )
 
     def __init__(self, *args, **kwargs):

@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'tailor_app',
     'accounts',
     'portal',
+    # Installed apps
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [
@@ -126,16 +128,26 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+# STATIC FILES (CSS, JS, IMAGES)
 STATIC_URL = 'static/'
+
+# Directory where you keep global static files
+STATICFILES_DIRS = [
+    BASE_DIR / "static",   # project-level static
+]
+
+# Directory where collectstatic will copy all files
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+
+# MEDIA FILES (User uploads)
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Media files (User uploaded content)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Authentication settings
 LOGIN_URL = 'accounts:login'

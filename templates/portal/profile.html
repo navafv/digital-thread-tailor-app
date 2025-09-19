@@ -3,10 +3,43 @@
 {% block title %}My Profile{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+<h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">My Profile</h2>
+{% comment %} <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">My Profile</h1>
+</div> {% endcomment %}
+
+<div class="grid gap-6 mb-8 md:grid-cols-2">
+    <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+        <h4 class="mb-4 font-semibold text-gray-600 dark:text-gray-300">
+            My Contact Information
+        </h4>
+        <p class="text-gray-600 dark:text-gray-400">
+            <span><strong>Name:</strong> {{ customer.name }}</span><br>
+            <span><strong>Phone:</strong> {{ customer.phone }}</span><br>
+            <span><strong>Email:</strong> {{ customer.email|default:"Not provided" }}</span><br>
+            <span><strong>Address:</strong> {{ customer.address|default:"Not provided" }}</span>
+        </p>
+    </div>
+    <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+        <h4 class="mb-4 font-semibold text-gray-600 dark:text-gray-300">
+            My Measurements on File
+        </h4>
+        <ul class="text-gray-600 dark:text-gray-400">
+            {% for measurement in measurements %}
+            <li>
+                <strong>{{ measurement.name }}:</strong> {{ measurement.value }}
+            </li>
+            {% empty %}
+            <li class="text-center p-4">
+                <p>No measurements on file.</p>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
 </div>
-<div class="row">
+
+
+{% comment %} <div class="row">
     <div class="col-lg-6">
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-light border-0">
@@ -42,6 +75,6 @@
             </ul>
         </div>
     </div>
-</div>
+</div> {% endcomment %}
 {% endblock %}
 

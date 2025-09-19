@@ -3,11 +3,28 @@
 {% block title %}My Orders{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">My Orders</h1>
-</div>
+<h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">My Orders</h2>
 
-<div class="card shadow-sm border-0">
+{% for order in orders %}
+<div class="px-4 py-3 mb-4 bg-white rounded-lg shadow-md dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+    <a href="{% url 'portal:order_detail' order.pk %}" class="text-sm">
+        <div class="flex justify-between">
+            <h5 class="text-xl font-bold">Order #{{ order.id }}: {{ order.item }}</h5>
+            <p>Due: {{ order.due_date|date:"Y-m-d" }}</p>
+        </div>
+        <p class="mb-1">
+            Status: <span class="px-2 py-1 text-xs font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">{{ order.status }}</span>
+        </p>
+        <p class="">Balance Due: ${{ order.balance_due|floatformat:2 }}</p>
+    </a>
+</div>
+{% empty %}
+    <div class="list-group-item text-center p-5">
+        <p class="text-muted mb-0">You have no orders to display.</p>
+    </div>
+{% endfor %}
+
+{% comment %} <div class="card shadow-sm border-0">
     <div class="list-group list-group-flush">
         {% for order in orders %}
             <a href="{% url 'portal:order_detail' order.pk %}" class="list-group-item list-group-item-action p-3">
@@ -26,6 +43,6 @@
             </div>
         {% endfor %}
     </div>
-</div>
+</div> {% endcomment %}
 {% endblock %}
 

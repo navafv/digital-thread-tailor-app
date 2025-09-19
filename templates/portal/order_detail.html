@@ -3,12 +3,61 @@
 {% block title %}Order #{{ order.id }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Order #{{ order.id }}: {{ order.item }}</h1>
-    <span class="badge rounded-pill text-bg-primary fs-6">{{ order.status }}</span>
+
+<div class="flex justify-between items-center">
+    <h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">Order #{{ order.id }}: {{ order.item }}</h2>
+    <span class="px-2 py-1 text-sm font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">{{ order.status }}</span>
 </div>
 
-<div class="card shadow-sm border-0">
+{% comment %} <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Order #{{ order.id }}: {{ order.item }}</h1>
+    <span class="badge rounded-pill text-bg-primary fs-6">{{ order.status }}</span>
+</div> {% endcomment %}
+
+<div class="flex justify-between px-4 py-3 mb-8 bg-white rounded-lg shadow-md dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+    <div>
+        <h5 class="text-lg font-bold mb-4">Order Information</h5>
+        <p class="mb-2"><strong>Due Date:</strong> {{ order.due_date|date:"F d, Y" }}</p>
+        <p><strong>Notes from your tailor:</strong> {{ order.notes|default:"No notes provided." }}</p>
+    </div>
+    <div>
+        <h5 class="text-lg font-bold mb-2">Financials</h5>
+        <ul class="ml-4">
+            <li class="p-2 flex justify-between">
+                <span class="mr-6">Total Price:</span>
+                <strong>${{ order.price|floatformat:2 }}</strong>
+            </li>
+            <hr>
+            <li class="p-2 flex justify-between">
+                <span class="mr-6">Amount Paid:</span>
+                <strong>${{ order.amount_paid|floatformat:2 }}</strong>
+            </li>
+            <hr>
+            <li class="p-2 flex justify-between">
+                <span class="mr-6">Balance Due:</span>
+                <strong class="text-red-700">${{ order.balance_due|floatformat:2 }}</strong>
+            </li>
+        </ul>
+    </div>
+</div>
+
+{% if order.tasks.all %}
+<div class="px-4 py-3 mb-8 bg-white rounded-lg shadow-md dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+    <h4 class="text-lg font-bold mb-4">Order Progress</h4>
+    <div class="text-sm text-gray-600 dark:text-gray-400">
+        {% for task in order.tasks.all %}
+            <div class="px-4 py-2 text-lg font-semibold flex items-center">
+                <input class="text-purple-600 form-checkbox focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray" type="checkbox" value="" id="task-{{task.id}}" {% if task.is_completed %}checked{% endif %} disabled>
+                <label class="ml-2{% if task.is_completed %} line-through{% endif %}" for="task-{{task.id}}">
+                    {{ task.task_definition.name }}
+                </label>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% comment %} <div class="card shadow-sm border-0">
     <div class="card-body">
         <div class="row">
             <div class="col-md-8">
@@ -53,7 +102,7 @@
         {% endfor %}
     </div>
 </div>
-{% endif %}
+{% endif %} {% endcomment %}
 
 {% endblock %}
 

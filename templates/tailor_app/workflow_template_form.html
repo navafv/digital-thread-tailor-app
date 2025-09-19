@@ -3,11 +3,31 @@
 {% block title %}{% if template %}Edit{% else %}Create{% endif %} Workflow{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">{% if template %}Edit{% else %}Create{% endif %} Workflow Template</h1>
-</div>
+<h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">
+    {% if template %}Edit{% else %}Create{% endif %} Workflow Template
+</h2>
 
-<form method="post">
+<form method="post" class="px-4 py-3 mb-8 bg-white rounded-lg shadow-md dark:bg-gray-800 text-gray-700 dark:text-gray-400">
+    {% csrf_token %}
+    <label for="{{ field.id_for_label }}" class="block text-sm">
+        <span class="text-gray-700 dark:text-gray-400">{{ form.name.label }}</span>
+        {{ form.name }}
+    </label>
+    {{ formset.management_form }}
+    {% for form in formset %}
+    <div class="grid grid-cols-6 gap-2 mb-2 items-center">
+        <div class="col-span-3">{{ form.name }}</div>
+        <div class="col-span-2">{{ form.order }}</div>
+        <div class="col-span-1">{{ form.DELETE }} Delete</div>
+    </div>
+    {% endfor %}
+    <button type="submit" class="mt-4 px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">Save Template</button>
+    <button class="w-full px-5 py-3 text-sm font-medium leading-5 text-white text-gray-700 transition-colors duration-150 border border-gray-300 rounded-lg dark:text-gray-400 sm:px-4 sm:py-2 sm:w-auto active:bg-transparent hover:border-gray-500 focus:border-gray-500 active:text-gray-500 focus:outline-none focus:shadow-outline-gray">
+        <a href="{% url 'tailor_app:workflow_list' %}">Cancel</a>
+    </button>
+</form>
+
+{% comment %} <form method="post">
     {% csrf_token %}
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-header bg-light border-0"><h5 class="mb-0">Template Name</h5></div>
@@ -35,6 +55,6 @@
     
     <button type="submit" class="btn btn-primary btn-lg mt-4">Save Template</button>
     <a href="{% url 'tailor_app:workflow_list' %}" class="btn btn-secondary btn-lg mt-4">Cancel</a>
-</form>
+</form> {% endcomment %}
 {% endblock %}
 

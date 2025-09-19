@@ -3,11 +3,28 @@
 {% block title %}{% if supplier %}Edit Supplier{% else %}Add Supplier{% endif %}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+<h2 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">
+    {% if supplier %}Edit {{ supplier.name }}{% else %}Add New Supplier{% endif %}
+</h2>
+{% comment %} <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <h1 class="h2">{% if supplier %}Edit {{ supplier.name }}{% else %}Add New Supplier{% endif %}</h1>
-</div>
+</div> {% endcomment %}
 
-<div class="card shadow-sm border-0">
+<form method="post" novalidate class="px-4 py-3 mb-8 bg-white rounded-lg shadow-md dark:bg-gray-800">
+    {% csrf_token %}
+    {% for field in form %}
+        <label for="{{ field.id_for_label }}" class="block text-sm">
+            <span class="text-gray-700 dark:text-gray-400">{{ field.label }}</span>
+            {{ field }}
+        </label>
+    {% endfor %}
+    <button type="submit" class="mt-4 px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">Save Supplier</button>
+    <button class="w-full px-5 py-3 text-sm font-medium leading-5 text-white text-gray-700 transition-colors duration-150 border border-gray-300 rounded-lg dark:text-gray-400 sm:px-4 sm:py-2 sm:w-auto active:bg-transparent hover:border-gray-500 focus:border-gray-500 active:text-gray-500 focus:outline-none focus:shadow-outline-gray">
+        <a href="{% url 'tailor_app:supplier_list' %}">Cancel</a>
+    </button>
+</form>
+
+{% comment %} <div class="card shadow-sm border-0">
     <div class="card-body">
         <form method="post" novalidate>
             {% csrf_token %}
@@ -21,6 +38,6 @@
             <a href="{% url 'tailor_app:supplier_list' %}" class="btn btn-secondary btn-lg mt-3">Cancel</a>
         </form>
     </div>
-</div>
+</div> {% endcomment %}
 {% endblock %}
 

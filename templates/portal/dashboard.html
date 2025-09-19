@@ -4,14 +4,63 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Welcome, {{ customer.name }}</h1>
-    <a href="{% url 'portal:request_appointment' %}" class="btn btn-primary">
-        <i data-feather="plus" class="me-1"></i> Request New Appointment
+<div class="flex justify-between items-center mb-6">
+    <h1 class="my-6 text-2xl font-semibold text-gray-700 dark:text-gray-200">Welcome, Aquib</h1>
+    <a href="{% url 'portal:request_appointment' %}" class="px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
+        + Request New Appointment
     </a>
 </div>
 
-<div class="row mt-4">
+<div class="grid gap-6 mb-8 md:grid-cols-2">
+    <!-- Confirmed Appointments Column -->
+    <div
+    class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800"
+    >
+        <h4 class="mb-4 text-xl font-semibold text-gray-600 dark:text-gray-300">
+            Confirmed Appointments
+        </h4>
+        <div class="text-gray-600 dark:text-gray-400">
+            {% if not confirmed_appointments %}
+                <hr>
+            {% endif %}
+            {% for appt in confirmed_appointments %}
+            <hr>
+            <div class="py-2">
+                <p class="font-bold">{{ appt.title }}</p>
+                <p>{{ appt.start_time|date:"l, F d, Y" }}</p>
+                <p class="font-semibold">From {{ appt.start_time|date:"P" }} to {{ appt.end_time|date:"P" }}</p>
+            </div>
+            {% empty %}
+            <p class="mt-2">You have no confirmed appointments.</p>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- Pending Requests Column -->
+    <div
+    class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800"
+    >
+        <h4 class="mb-4 text-xl font-semibold text-gray-600 dark:text-gray-300">
+            Pending Requests
+        </h4>
+        <div  class="text-gray-600 dark:text-gray-400">
+            {% if not pending_appointments %}
+                <hr>
+            {% endif %}
+            {% for appt in pending_appointments %}
+            <hr>
+            <div class="py-2">
+                <p class="font-bold">{{ appt.title }}</p>
+                <p>{{ appt.start_time|date:"l, F d, Y" }}</p>
+                <p class="font-semibold">From {{ appt.start_time|date:"P" }} to {{ appt.end_time|date:"P" }}</p>
+            </div>
+            {% empty %}
+            <p class="mt-2">You have no pending appointment requests.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% comment %} <div class="row mt-4">
     <!-- Confirmed Appointments Column -->
     <div class="col-lg-6 mb-4">
         <div class="card h-100 shadow-sm border-0">
@@ -59,9 +108,59 @@
             </div>
         </div>
     </div>
+</div> {% endcomment %}
+
+<h4 class="mb-4 text-xl font-semibold text-gray-600 dark:text-gray-300">
+    Recent Orders
+</h4>
+
+<div class="w-full overflow-hidden rounded-lg shadow-xs">
+    <div class="w-full overflow-x-auto">
+        <table class="w-full whitespace-no-wrap">
+            <thead>
+            <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase border-b dark:border-gray-700 bg-gray-50 dark:text-gray-400 dark:bg-gray-800">
+                <th class="px-4 py-3">Item</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3">Due Date</th>
+                <th class="px-4 py-3">Details</th>
+            </tr>
+            </thead>
+            <tbody class="bg-white divide-y dark:divide-gray-700 dark:bg-gray-800">
+                {% for order in customer.orders.all|slice:":5" %}
+                <tr class="text-gray-700 dark:text-gray-400">
+                    <td class="px-4 py-3 text-sm">
+                        {{ order.item }}
+                    </td>
+                    <td class="px-4 py-3 text-xs">
+                    <span class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">
+                        {{ order.status }}
+                    </span>
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                        {{ order.due_date|date:"F d, Y" }}
+                    </td>
+                    <td class="px-4 py-3 text-sm">
+                        <a href="{% url 'portal:order_detail' order.pk %}" class="px-2 py-1 border rounded-lg">
+                            View Details
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center p-4">You have not placed any orders yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if customer.orders.all.count > 5 %}
+    <div class="px-4 py-3 text-center text-xs font-semibold tracking-wide text-gray-500 uppercase border-t dark:border-gray-700 bg-gray-50 sm:grid-cols-9 dark:text-gray-400 dark:bg-gray-800">
+        <a href="{% url 'portal:order_list' %}">View All Orders</a>
+    </div>
+    {% endif %}
 </div>
 
-<div class="card shadow-sm border-0 mt-4">
+{% comment %} <div class="card shadow-sm border-0 mt-4">
     <div class="card-header bg-light border-0">
         <h4 class="mb-0">Recent Orders</h4>
     </div>
@@ -98,6 +197,6 @@
             <a href="{% url 'portal:order_list' %}">View All Orders</a>
         </div>
     {% endif %}
-</div>
+</div> {% endcomment %}
 {% endblock %}
 

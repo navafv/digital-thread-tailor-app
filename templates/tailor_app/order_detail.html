@@ -3,7 +3,22 @@
 {% block title %}Order #{{ order.id }}{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+<div class="my-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-semibold text-gray-700 dark:text-gray-200">Order #{{ order.id }}: {{ order.item }}</h2>
+        <p class="text-gray-700 dark:text-gray-200 text-sm">For {{ order.customer.name }}</p>
+    </div>
+    <div>
+        <a href="{% url 'tailor_app:generate_pdf_invoice' order.id %}" class="px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
+            Download Invoice
+        </a>
+        <a href="{% url 'tailor_app:edit_order' order.id %}" class="ml-2 px-5 py-3 font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">
+            Edit Order
+        </a>
+    </div>
+</div>
+
+{% comment %} <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     <div>
         <h1 class="h2 mb-0">Order #{{ order.id }}: {{ order.item }}</h1>
         <p class="text-muted">For {{ order.customer.name }}</p>
@@ -12,9 +27,60 @@
         <a href="{% url 'tailor_app:generate_pdf_invoice' order.id %}" class="btn btn-success me-2"><i data-feather="download" class="me-1"></i> Download Invoice</a>
         <a href="{% url 'tailor_app:edit_order' order.id %}" class="btn btn-secondary"><i data-feather="edit-2" class="me-1"></i> Edit Order</a>
     </div>
+</div> {% endcomment %}
+
+<div class="grid gap-6 mb-8 md:grid-cols-2">
+    <div>
+        <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800 mb-4">
+            <h4 class="text-lg mb-4 font-semibold text-gray-700 dark:text-gray-300">
+                Order Details
+            </h4>
+            <div class="text-gray-600 dark:text-gray-400">
+                <p class="mb-2"><strong>Status:</strong> <span class="px-2 py-1 text-xs font-semibold leading-tight text-green-700 bg-green-100 rounded-full dark:bg-green-700 dark:text-green-100">{{ order.status }}</span></p>
+                <p class="mb-2"><strong>Due Date:</strong> {{ order.due_date|date:"F d, Y" }}</p>
+                <p class="mb-2"><strong>Fabric Details:</strong> {{ order.fabric_details|default:"N/A" }}</p>
+                <p class="mb-2"><strong>Notes:</strong> {{ order.notes|default:"N/A" }}</p>
+            </div>
+        </div>
+        <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+            <h4 class="text-lg mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                Financials
+            </h4>
+            <ul class="text-gray-600 dark:text-gray-400">
+                <li class="flex justify-between border-b py-2"><span>Total Price:</span> <strong>₹{{ order.price|floatformat:2 }}</strong></li>
+                <li class="flex justify-between border-b py-2"><span>Amount Paid:</span> <strong>₹{{ order.amount_paid|floatformat:2 }}</strong></li>
+                <li class="flex justify-between border-b py-2"><span>Balance Due:</span> <strong class="text-red-700 dark:text-red-950">₹{{ order.balance_due|floatformat:2 }}</strong></li>
+            </ul>
+        </div>
+    </div>
+    <div class="min-w-0 p-4 bg-white rounded-lg shadow-xs dark:bg-gray-800">
+        <h4 class="text-lg mb-4 font-semibold text-gray-700 dark:text-gray-300">
+            Image Gallery
+        </h4>
+        <div class="grid md:grid-cols-2">
+            {% for image in order.images.all %}
+                <div class="text-gray-600 dark:text-gray-400 p-2 col-span-1">
+                    <a href="{{ image.image.url }}" target="_blank"><img src="{{ image.image.url }}" class="rounded" alt="{{ image.caption }}"></a>
+                </div>
+            {% empty %}
+                <p class="text-center text-gray-600 dark:text-gray-400 col-span-2">No images uploaded for this order yet.</p>
+            {% endfor %}
+        </div>
+        <hr class="mt-4 mb-4">
+        <h4 class="text-lg mb-4 font-semibold text-gray-700 dark:text-gray-300">
+            Upload New Image
+        </h4>
+        <form method="post" enctype="multipart/form-data" action="{% url 'tailor_app:order_detail' order.id %}">
+            {% csrf_token %}
+            <div class="flex justify-between items-center">
+                {{ image_form.image }}
+                <button class="ml-2 px-5 py-3 text-base font-medium leading-5 text-white text-gray-700 transition-colors duration-150 border border-gray-300 rounded-lg dark:text-gray-400 sm:px-4 sm:py-2 sm:w-auto active:bg-transparent hover:border-gray-500 focus:border-gray-500 active:text-gray-500 focus:outline-none focus:shadow-outline-gray" type="submit">Upload</button>
+            </div>
+        </form>
+    </div>
 </div>
 
-<div class="row">
+{% comment %} <div class="row">
     <!-- Left Column: Details & Financials -->
     <div class="col-lg-5">
         <div class="card shadow-sm border-0 mb-4">
@@ -29,9 +95,9 @@
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-light border-0"><h5 class="mb-0">Financials</h5></div>
             <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between"><span>Total Price:</span> <strong>${{ order.price|floatformat:2 }}</strong></li>
-                <li class="list-group-item d-flex justify-content-between"><span>Amount Paid:</span> <strong>${{ order.amount_paid|floatformat:2 }}</strong></li>
-                <li class="list-group-item d-flex justify-content-between bg-light"><span>Balance Due:</span> <strong class="text-danger">${{ order.balance_due|floatformat:2 }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Total Price:</span> <strong>₹{{ order.price|floatformat:2 }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between"><span>Amount Paid:</span> <strong>₹{{ order.amount_paid|floatformat:2 }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between bg-light"><span>Balance Due:</span> <strong class="text-danger">₹{{ order.balance_due|floatformat:2 }}</strong></li>
             </ul>
         </div>
     </div>
@@ -62,9 +128,47 @@
             </div>
         </div>
     </div>
+</div> {% endcomment %}
+
+<div class="px-4 py-3 mb-8 bg-white rounded-lg shadow-md dark:bg-gray-800 text-base text-gray-600 dark:text-gray-400">
+    <h4 class="text-lg mb-4 font-semibold text-gray-700 dark:text-gray-300">
+        Production Workflow
+    </h4>
+    {% if order.tasks.exists %}
+    <ul>
+        {% for task in order.tasks.all %}
+        <li class="flex items-center justify-between">
+            <div class="flex items-center">
+                <form action="{% url 'tailor_app:update_task' task.id %}" method="post" class="me-3">
+                    {% csrf_token %}
+                    <input type="checkbox" name="is_completed" class="text-purple-600 form-checkbox focus:border-purple-400 focus:outline-none focus:shadow-outline-purple dark:focus:shadow-outline-gray" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %}>
+                </form>
+                <span class="ml-2 fs-5" {% if task.is_completed %}style="text-decoration: line-through;"{% endif %}>{{ task.task_definition.name }}</span>
+            </div>
+            {% if task.is_completed and task.completed_at %}
+            <small class="right-0">✓ {{ task.completed_at|date:"M d" }}</small>
+            {% endif %}
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-center">No workflow has been applied to this order yet.</p>
+    <form action="{% url 'tailor_app:apply_workflow' order.id %}" method="post">
+        {% csrf_token %}
+        <div>
+            <label class="block mt-4 text-sm" for="id_template">
+                <span class="text-gray-700 dark:text-gray-400">
+                  Select a Workflow Template
+                </span>
+                {{ apply_workflow_form.template }}
+            </label>
+        </div>
+        <button type="submit" class="mt-2 px-4 py-2 text-sm font-medium leading-5 text-white transition-colors duration-150 bg-purple-600 border border-transparent rounded-lg active:bg-purple-600 hover:bg-purple-700 focus:outline-none focus:shadow-outline-purple">Apply Workflow</button>
+    </form>
+    {% endif %}
 </div>
 
-<!-- Full Width: Workflow -->
+{% comment %} <!-- Full Width: Workflow -->
 <div class="card shadow-sm border-0 mt-4">
     <div class="card-header bg-light border-0"><h5 class="mb-0">Production Workflow</h5></div>
     <div class="card-body">
@@ -95,6 +199,6 @@
         </form>
         {% endif %}
     </div>
-</div>
+</div> {% endcomment %}
 {% endblock %}
 

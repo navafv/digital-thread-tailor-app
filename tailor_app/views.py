@@ -112,7 +112,14 @@ def customer_list(request):
 @login_required
 def customer_detail(request, customer_id):
     customer = get_object_or_404(Customer, pk=customer_id, tailor=request.user)
-    return render(request, 'tailor_app/customer_detail.html', {'customer': customer})
+    measurements = customer.measurements.all()  # get all measurements
+    form = MeasurementForm()  # empty form for the modal
+
+    return render(request, 'tailor_app/customer_detail.html', {
+        'customer': customer,
+        'measurements': measurements,
+        'form': form,
+    })
 
 @login_required
 def add_customer(request):
@@ -185,11 +192,20 @@ def add_measurement(request, customer_id):
             measurement = form.save(commit=False)
             measurement.customer = customer
             measurement.save()
-    return redirect('tailor_app:customer_detail', customer_id=customer_id)
+            return redirect('tailor_app:customer_detail', customer_id=customer_id)
+    else:
+        form = MeasurementForm()
+
+    return render(request, 'tailor_app/customer_detail.html', {
+        'customer': customer,
+        'form': form,
+    })
 
 @login_required
 def edit_measurement(request, measurement_id):
-    measurement = get_object_or_404(Measurement, pk=measurement_id, customer__tailor=request.user)
+    measurement = get_object_or_404(
+        Measurement, pk=measurement_id, customer__tailor=request.user
+    )
     if request.method == 'POST':
         form = MeasurementForm(request.POST, instance=measurement)
         if form.is_valid():
@@ -201,10 +217,15 @@ def edit_measurement(request, measurement_id):
 
 @login_required
 def delete_measurement(request, measurement_id):
-    measurement = get_object_or_404(Measurement, pk=measurement_id, customer__tailor=request.user)
+    measurement = get_object_or_404(
+        Measurement, pk=measurement_id, customer__tailor=request.user
+    )
+    customer_id = measurement.customer.id  # store before deletion
+
     if request.method == 'POST':
         measurement.delete()
-        return redirect('tailor_app:customer_detail', customer_id=measurement.customer.id)
+        return redirect('tailor_app:customer_detail', customer_id=customer_id)
+
     return render(request, 'tailor_app/confirm_delete.html', {'object': measurement})
 
 @login_required
